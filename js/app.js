@@ -5,9 +5,16 @@
 
 $(document).ready(function(){
 
-	var pChart = new PieChart();
 	var chartData = [113,100,50,28,27];
+	var $chart = $('#chart');
 
+	var pChart = new PieChart();
+
+	pChart.setBaseSettings({
+		baseX: $chart.width() / 2,
+		baseY: $chart.width() / 2 + 30,
+		pieRadius: $chart.width() / 2 - 100
+	});
 	pChart.init( '#chart', chartData );
 
 });
@@ -26,17 +33,36 @@ function PieChart() {
 	 */
 	var pieData = [];
 
+	/*-------- Basic Settings --------*/
 	var pieRadius = 180;
 	var baseX = 300;
 	var baseY = 200;
 	var colors = ["#468966","#FFF0A5","#FFB03B","#B64926","#8E2800"];
 
 	/**
+	 * Rewriting base settings
+	 * @param newSettings (Object)
+	 * @return
+	 *      true - data added
+	 *      false - error occurred
+	 */
+	this.setBaseSettings = function( newSettings ){
+		if ( newSettings == null || typeof newSettings !== 'object' ) {
+			console.warn('%cnewSettings should be an Object', 'font-weight: 700');
+			return false;
+		}
+		pieRadius = newSettings.hasOwnProperty( 'pieRadius' ) ? newSettings.pieRadius : pieRadius;
+		baseX = newSettings.hasOwnProperty( 'baseX' ) ? newSettings.baseX : baseX;
+		baseY = newSettings.hasOwnProperty( 'baseY' ) ? newSettings.baseY : baseY;
+		return true;
+	};
+
+	/**
 	 * Set new pie data
 	 * @param newData (Array)
 	 * @return
 	 *      true - data added
-	 *      false - error occured
+	 *      false - error occurred
 	 */
 	this.setPieData = function( newData ){
 		var total = 0;
@@ -65,10 +91,10 @@ function PieChart() {
 	 * Drawing pie
 	 */
 	this.drawPie = function(){
-		var startAngle = 0;
-		var endAngle = 0;
+		var startAngle = endAngle = 0;
 		var x1,x2,y1,y2 = 0;
 		var startX, startY;
+		var sector;
 
 		for(var i=0, l=pieData.length; i<l; i++){
 			startAngle = endAngle;
@@ -91,11 +117,27 @@ function PieChart() {
 			}
 
 			var pathStr = 'M'+ baseX +','+ baseY +'  L' + x1 + ',' + y1 + '  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
-			//alert(pathStr);
-			arc = Chart.path( pathStr );
-			arc.attr('fill',pieData[i].color);
+
+			sector = Chart.path( pathStr );
+			sector
+				.attr('fill',pieData[i].color)
+				.click( sectorClick );
+			pieData[i].id = sector.id;
 		}
 	};
+
+	/**
+	 * Sector click handler
+	 */
+	function sectorClick() {
+		/*
+		 * Creating new matrix
+		 * @example http://svg.dabbles.info/snaptut-matrix.html
+		 */
+		var newMatrix = new Snap.Matrix();
+		newMatrix.scale(1.2,1.2, baseX, baseY);
+		this.animate({ transform: newMatrix }, 500, mina.bounce);
+	}
 
 	/**
 	 * Pie Chart initialisation
