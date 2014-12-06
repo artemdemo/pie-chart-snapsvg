@@ -11,8 +11,8 @@ window.onload = function() {
 
 	pChart.setBaseSettings({
 		baseX: $chart.offsetWidth / 2,
-		baseY: $chart.offsetWidth / 2 + 30,
-		pieRadius: $chart.offsetWidth / 2 - 100,
+		baseY: $chart.offsetWidth / 2,
+		pieRadius: $chart.offsetWidth / 2 - $chart.offsetWidth * 0.1,
 		donutInnerRadius: 0
 	});
 	pChart.init( '#chart', chartData );
