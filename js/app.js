@@ -9,11 +9,13 @@ window.onload = function() {
 
 	var pChart = new PieChart();
 
+	var radius = $chart.offsetWidth / 2 - $chart.offsetWidth * 0.1;
+
 	pChart.setBaseSettings({
 		baseX: $chart.offsetWidth / 2,
 		baseY: $chart.offsetWidth / 2,
-		pieRadius: $chart.offsetWidth / 2 - $chart.offsetWidth * 0.1,
-		donutInnerRadius: 0
+		pieRadius: radius,
+		donutInnerRadius: radius * 0.43
 	});
 	pChart.init( '#chart', chartData );
 
@@ -96,10 +98,11 @@ function PieChart() {
 	 * Drawing pie
 	 */
 	this.drawPie = function(){
-		var startAngle = endAngle = 0;
+		var startAngle = endAngle = 0; // startAngle & endAngle are in degrees
 		var x1,x2,y1,y2 = 0;
 		var startX, startY;
-		var sector, donutInnerCircle;
+		var pathStr, sector;
+		var donutInnerCircle, shadow, clipShadow;
 
 		for(var i=0, l=pieData.length; i<l; i++){
 			startAngle = endAngle;
@@ -121,7 +124,7 @@ function PieChart() {
 				x2 = startX; y2 = startY;
 			}
 
-			var pathStr = 'M'+ baseX +','+ baseY +'  L' + x1 + ',' + y1 + '  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
+			pathStr = 'M'+ baseX +','+ baseY +'  L'+ x1 +','+ y1 +'  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
 
 			sector = Chart.path( pathStr );
 			sector
@@ -137,9 +140,20 @@ function PieChart() {
 		 */
 		if ( donutInnerRadius ) {
 			donutInnerCircle = Chart.circle(baseX, baseY, donutInnerRadius);
-			donutInnerCircle.attr({
-				fill: "#fff"
-			});
+			donutInnerCircle.attr('fill', '#bbb');
+
+			/*
+			 * Creating shadow for inner part.
+			 * Pay attention that shadow is actually donutInnerCircle
+			 * shadow & clipShadow are masked together and placing on top of donutInnerCircle
+			 */
+			shadow = Chart.circle(baseX, baseY, donutInnerRadius);
+			shadow.attr('fill', '#fff');
+
+			clipShadow = Chart.circle(baseX + 2, baseY + 2, donutInnerRadius);
+			clipShadow.attr('fill', '#fff');
+
+			shadow.attr('mask', clipShadow);
 		}
 
 	};
