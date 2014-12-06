@@ -1,3 +1,8 @@
+/*
+ * Useful example: http://jbkflex.wordpress.com/2011/07/28/creating-a-svg-pie-chart-html5/
+ */
+
+
 $(document).ready(function(){
 
 	var pChart = new PieChart();
@@ -21,7 +26,9 @@ function PieChart() {
 	 */
 	var pieData = [];
 
-	var radius = 50;
+	var pieRadius = 180;
+	var baseX = 300;
+	var baseY = 200;
 	var colors = ["#468966","#FFF0A5","#FFB03B","#B64926","#8E2800"];
 
 	/**
@@ -41,12 +48,12 @@ function PieChart() {
 		}
 
 		// Calculating total amount of given data
-		for (var i=0, l=newData.length; i<l; i++) total += newData[i];
+		for (var i=0; i<newData.length; i++) total += newData[i];
 
-		for (var j=0; j<l; j++) {
+		for (var j=0; j<newData.length; j++) {
 			pieData.push({
 				data: newData[j],
-				angle: Math.ceil(360 * newData[j]/total),
+				angle: Math.round(360 * newData[j]/total),
 				color: colors[j]
 			});
 		}
@@ -61,21 +68,32 @@ function PieChart() {
 		var startAngle = 0;
 		var endAngle = 0;
 		var x1,x2,y1,y2 = 0;
+		var startX, startY;
 
 		for(var i=0, l=pieData.length; i<l; i++){
 			startAngle = endAngle;
 			endAngle = startAngle + pieData[i].angle;
 
-			x1 = parseInt(200 + 180*Math.cos(Math.PI*startAngle/180));
-			y1 = parseInt(200 + 180*Math.sin(Math.PI*startAngle/180));
+			x1 = parseInt(baseX + pieRadius*Math.cos(Math.PI*startAngle/180));
+			y1 = parseInt(baseY + pieRadius*Math.sin(Math.PI*startAngle/180));
 
-			x2 = parseInt(200 + 180*Math.cos(Math.PI*endAngle/180));
-			y2 = parseInt(200 + 180*Math.sin(Math.PI*endAngle/180));
+			x2 = parseInt(baseX + pieRadius*Math.cos(Math.PI*endAngle/180));
+			y2 = parseInt(baseY + pieRadius*Math.sin(Math.PI*endAngle/180));
 
-			var pathStr = "M200,200  L" + x1 + "," + y1 + "  A180,180 0 0,1 " + x2 + "," + y2 + " z"; //1 means clockwise
-			//alert(d);
+			/*
+			 * Solving problem of not fitting the last sector with the first one
+			 * This problem cases by number rounding, and the easiest way to solve it is to use the same coordinates for lat point as for the first one
+			 */
+			if ( i == 0 ) {
+				startX = x1; startY = y1;
+			} else if ( i == l-1 ) {
+				x2 = startX; y2 = startY;
+			}
+
+			var pathStr = 'M'+ baseX +','+ baseY +'  L' + x1 + ',' + y1 + '  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
+			//alert(pathStr);
 			arc = Chart.path( pathStr );
-			arc.attr("fill",pieData[i].color);
+			arc.attr('fill',pieData[i].color);
 		}
 	};
 
