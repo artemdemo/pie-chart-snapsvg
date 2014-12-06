@@ -4,7 +4,13 @@
 
 window.onload = function() {
 
-	var chartData = [113,100,50,28,27];
+	var chartData = [
+		{'amount': 113, 'title': 'Car'},
+		{'amount': 100, 'title': 'Food'},
+		{'amount': 50, 'title': 'Other'},
+		{'amount': 28, 'title': 'Clothes'},
+		{'amount': 27, 'title': 'Entertainment'}
+	];
 	var $chart = document.getElementById('chart');
 
 	var pChart = new PieChart();
@@ -40,6 +46,11 @@ function PieChart() {
 	var baseX = 300;
 	var baseY = 200;
 	var donutInnerRadius = 0;
+
+	var donutChildren = {
+		title: null,
+		amount: null
+	};
 
 	var colors = ["#468966","#FFF0A5","#FFB03B","#B64926","#8E2800"];
 
@@ -79,14 +90,15 @@ function PieChart() {
 		}
 
 		// Calculating total amount of given data
-		for (var i=0; i<newData.length; i++) total += newData[i];
+		for (var i=0; i<newData.length; i++) total += newData[i].amount;
 
 		for (var j=0; j<newData.length; j++) {
 			pieData.push({
 				sectorID: null,
-				data: newData[j],
-				angle: 360 * newData[j]/total,
+				amount: newData[j].amount,
+				angle: 360 * newData[j].amount/total,
 				color: colors[j],
+				title: newData[j].title,
 				scale: 1
 			});
 		}
@@ -129,6 +141,7 @@ function PieChart() {
 			sector = Chart.path( pathStr );
 			sector
 				.attr('fill',pieData[i].color)
+				.addClass('pie-sector')
 				.click( sectorClick );
 
 			// Save id of new sector for later reference
@@ -169,16 +182,32 @@ function PieChart() {
 		var newMatrix = new Snap.Matrix();
 		var pieSector = getPieDataByID( this.id );
 		var scaleVar = 1.2;
+		var id = this.id;
 
 		if ( pieSector && pieSector.scale == 1 ) {
 			newMatrix.scale(scaleVar, scaleVar, baseX, baseY);
-			setPieDataProperty( this.id, 'scale', scaleVar );
+			pieDataProperty( this.id, 'scale', scaleVar );
+
+			/*
+			 * Closing other sectors
+			 */
+			var closeMatrix = new Snap.Matrix();
+			closeMatrix.scale(1, 1, baseX, baseY);
+
+			Snap.selectAll('.pie-sector').forEach(function( sector ){
+				if ( sector.id !== id && pieDataProperty( sector.id, 'scale', undefined ) !== 1  ) {
+					sector.animate({ transform: closeMatrix }, 500, mina.bounce);
+					pieDataProperty( sector.id, 'scale', 1 );
+				}
+			});
 		} else {
 			newMatrix.scale(1, 1, baseX, baseY);
-			setPieDataProperty( this.id, 'scale', 1 );
+			pieDataProperty( id, 'scale', 1 );
 		}
 
 		this.animate({ transform: newMatrix }, 500, mina.bounce);
+
+		drawDonutText( pieSector.title, pieSector.amount );
 	}
 
 	/**
@@ -196,22 +225,72 @@ function PieChart() {
 	}
 
 	/**
-	 * Set property value of pieData
+	 * Manipulating with property value of pieData
 	 * @param sID
 	 * @param property
 	 * @param data
-	 * @returns {boolean}
+	 * @returns
+	 *      Value of property
+	 * @returns {Boolean}
 	 *      true - property was set
 	 *      false - error occurred (no such ID, or no such property)
 	 */
-	function setPieDataProperty( sID, property, data ) {
+	function pieDataProperty( sID, property, data ) {
 		for ( var i=0; i<pieData.length; i++ ) {
 			if ( sID == pieData[i].sectorID && pieData[i].hasOwnProperty( property ) ) {
-				pieData[i][property] = data;
-				return true;
+				if ( data !== undefined ) {
+					pieData[i][property] = data;
+					return true;
+				} else {
+					return pieData[i][property]
+				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Drawing text inside of donut
+	 * @param title
+	 * @param amount
+	 */
+	function drawDonutText( title, amount ) {
+		var newX, newY;
+
+		/*
+		 * Creating title
+		 */
+		if ( ! donutChildren.title ) {
+			donutChildren.title = Chart.text(baseX, baseY, title);
+			donutChildren.title.addClass('title');
+		} else {
+			donutChildren.title.node.textContent = title;
+		}
+
+		// Placing title in the center
+		newX = baseX - donutChildren.title.node.clientWidth / 2.1;
+		newY = baseY - donutChildren.title.node.clientHeight;
+		donutChildren.title.attr({
+			'x': newX,
+			'y': newY
+		});
+
+
+		/*
+		 * Creating amount
+		 */
+		if ( ! donutChildren.amount ) {
+			donutChildren.amount = Chart.text(baseX, baseY, amount);
+			donutChildren.amount.addClass('amount');
+		} else {
+			donutChildren.amount.node.textContent = amount;
+		}
+		newX = baseX - donutChildren.amount.node.clientWidth / 2.1;
+		newY = baseY + donutChildren.amount.node.clientHeight;
+		donutChildren.amount.attr({
+			'x': newX,
+			'y': newY
+		});
 	}
 
 	/**
