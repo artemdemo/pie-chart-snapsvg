@@ -4,5 +4,4 @@ Pie chart with onClick animation example
 
 ##Technology##
 
-http://snapsvg.io/
-http://jquery.com/
+[Snap.svg](http://snapsvg.io/)
