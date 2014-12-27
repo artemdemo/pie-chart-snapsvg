@@ -5,7 +5,7 @@
 window.onload = function() {
 
 	var chartData = [
-		{'amount': 113, 'title': 'Car'},
+		{'amount': 300, 'title': 'Car'},
 		{'amount': 100, 'title': 'Food'},
 		{'amount': 50, 'title': 'Other'},
 		{'amount': 28, 'title': 'Clothes'},
@@ -32,7 +32,7 @@ function PieChart() {
 
 	var self = this;
 
-	var Chart = null;
+	var Chart = null; // main Chart object
 
 	/*
 	 * Array of objects, each one contain information about the sector:
@@ -47,6 +47,7 @@ function PieChart() {
 	var baseY = 200;
 	var donutInnerRadius = 0;
 
+	// donutChildren will contain actual objects - title & amount
 	var donutChildren = {
 		title: null,
 		amount: null
@@ -136,7 +137,20 @@ function PieChart() {
 				x2 = startX; y2 = startY;
 			}
 
-			pathStr = 'M'+ baseX +','+ baseY +'  L'+ x1 +','+ y1 +'  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
+			/*
+       * If sector is more then 180 we have a problem with it's position
+       */
+      if ( (endAngle - startAngle) > 179 ) {
+          var _x, _y, _angle;
+          _angle = startAngle + ((endAngle - startAngle) / 2);
+          _x = parseInt(baseX + pieRadius*Math.cos(Math.PI*_angle/180));
+          _y = parseInt(baseY + pieRadius*Math.sin(Math.PI*_angle/180));
+          pathStr = 'M'+ baseX +','+ baseY +'  L'+ x1 +','+ y1 +
+              '  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + _x + ',' + _y +
+              '  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z';
+      } else {
+          pathStr = 'M'+ baseX +','+ baseY +'  L'+ x1 +','+ y1 +'  A'+ pieRadius +','+ pieRadius +' 0 0,1 ' + x2 + ',' + y2 + ' z'; //1 means clockwise
+      }
 
 			sector = Chart.path( pathStr );
 			sector
